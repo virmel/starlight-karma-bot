@@ -4,7 +4,7 @@ import json
 from aiohttp import web
 from multiprocessing import Process
 
-DISCORD_API_KEY = os.environ.get['DISCORD_API_KEY']
+DISCORD_API_KEY = os.environ['DISCORD_API_KEY']
 GLITTER_BOYS_CHAT_ID = 993226709107220601
 MUSIC_BOT_ID = 239631525350604801
 
