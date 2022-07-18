@@ -7,6 +7,7 @@ from multiprocessing import Process
 DISCORD_API_KEY = os.environ['DISCORD_API_KEY']
 GLITTER_BOYS_CHAT_ID = 993226709107220601
 MUSIC_BOT_ID = 239631525350604801
+STARLIGHT_ID = 716834761418735638
 
 # TODO:
 # Have DISCORD_API_KEY and GLITTER as env_variables and hide it from the public when pushing it to Github
@@ -41,6 +42,7 @@ async def on_message(message):
         return
     string_test = message.content
     if string_test[0] == '<':
+
         positive_karma = "++++" in message.content
         negative_karma = "----" in message.content
 
@@ -50,6 +52,10 @@ async def on_message(message):
 
         # e.g. 12343432596309 [int]
         mentioned_user_id = message.mentions[0].id
+
+        if(mentioned_user_id == STARLIGHT_ID):
+            await starlight_mention_handler(message.author.id, message.content, channel)
+
         # Handling user who gives themselves karma
         if(message.author.id == mentioned_user_id):
             read_karma_file = open("/data/karma.json", "r")
@@ -92,6 +98,20 @@ async def announce_karma(mentioned_user_id, current_karma, positive_or_negative_
     positive_or_negative = positive_or_negative_karma
     await channel.send(
         f'<@{mentioned_user_id}> received karma! Total karma: {current_karma}') if positive_or_negative else await channel.send(f'<@{mentioned_user_id}> lost karma.. :pepehands:  Total karma: {current_karma}')
+
+
+async def starlight_mention_handler(author_id, message_content, text_channel):
+    if("my karma" in message_content):
+        await get_user_karma(author_id, text_channel)
+
+
+async def get_user_karma(author_id, text_channel):
+    read_karma_file = open("/data/karma.json", "r")
+    karma_object = json.load(read_karma_file)
+    user_karma = karma_object.get(f"{author_id}", 0)
+    await text_channel.send(
+        f'<@{author_id}>, you have {user_karma} karma. Keep it up!'
+    )
 
 
 def main():
