@@ -11,7 +11,6 @@ MUSIC_BOT_ID = 239631525350604801
 # TODO:
 # Have DISCORD_API_KEY and GLITTER as env_variables and hide it from the public when pushing it to Github
 # rename variables
-# hook this up to Heroku
 # Refactor code - the section where karma is modified.
 
 client = discord.Client()
