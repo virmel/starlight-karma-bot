@@ -70,14 +70,15 @@ async def on_message(message):
 
             prev_karma = karma_object.get(f"{mentioned_user_id}", 0)
 
+            if positive_karma:
                 karma_object[f"{mentioned_user_id}"] = prev_karma + 1
 
-            current_karma = karma_object[f"{mentioned_user_id}"]
-            write_karma_file = open("/data/karma.json", "w")
-            json.dump(karma_object, write_karma_file)
-            write_karma_file.close()
+                current_karma = karma_object[f"{mentioned_user_id}"]
+                write_karma_file = open("/data/karma.json", "w")
+                json.dump(karma_object, write_karma_file)
+                write_karma_file.close()
 
-            await announce_karma(mentioned_user_id, current_karma)
+                await announce_karma(mentioned_user_id, current_karma)
 
 
 async def announce_karma(mentioned_user_id, current_karma):
