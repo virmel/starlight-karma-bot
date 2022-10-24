@@ -40,15 +40,10 @@ async def on_message(message):
 
     if message.author == client.user:       # Bot ignores own messages
         return
-    string_test = message.content
-    if string_test[0] == '<':
+    channel_message = message.content
+    if channel_message[0] == '<':
 
         positive_karma = "++++" in message.content
-        negative_karma = "----" in message.content
-
-        if positive_karma and negative_karma:
-            positive_karma, negative_karma = False
-            return
 
         # e.g. 12343432596309 [int]
         mentioned_user_id = message.mentions[0].id
@@ -74,30 +69,20 @@ async def on_message(message):
             read_karma_file.close()
 
             prev_karma = karma_object.get(f"{mentioned_user_id}", 0)
-            positive_karma_action_executed = False
-            negative_karma_action_executed = False
 
-            if positive_karma:
                 karma_object[f"{mentioned_user_id}"] = prev_karma + 1
-                positive_karma_action_executed = True
-            elif negative_karma:
-                karma_object[f"{mentioned_user_id}"] = prev_karma - 1
-                negative_karma_action_executed = True
 
             current_karma = karma_object[f"{mentioned_user_id}"]
             write_karma_file = open("/data/karma.json", "w")
             json.dump(karma_object, write_karma_file)
             write_karma_file.close()
 
-            if positive_karma_action_executed or negative_karma_action_executed:
-                await announce_karma(mentioned_user_id, current_karma, positive_karma_action_executed)
+            await announce_karma(mentioned_user_id, current_karma)
 
 
-async def announce_karma(mentioned_user_id, current_karma, positive_or_negative_karma):
+async def announce_karma(mentioned_user_id, current_karma):
     channel = client.get_channel(GLITTER_BOYS_CHAT_ID)
-    positive_or_negative = positive_or_negative_karma
-    await channel.send(
-        f'<@{mentioned_user_id}> received karma! Total karma: {current_karma}') if positive_or_negative else await channel.send(f'<@{mentioned_user_id}> lost karma.. :pepehands:  Total karma: {current_karma}')
+    await channel.send(f'<@{mentioned_user_id}> received karma! Total karma: {current_karma}')
 
 
 async def starlight_mention_handler(author_id, message_content, text_channel):
