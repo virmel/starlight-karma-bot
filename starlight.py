@@ -41,7 +41,7 @@ async def on_message(message):
     if message.author == client.user:       # Bot ignores own messages
         return
     channel_message = message.content
-    if channel_message[0] == '<':
+    if channel_message and channel_message[0] == '<':
 
         positive_karma = "++++" in message.content
 
