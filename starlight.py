@@ -78,7 +78,7 @@ async def on_message(message):
                 json.dump(karma_object, write_karma_file)
                 write_karma_file.close()
 
-            await announce_karma(mentioned_user_id, current_karma)
+                await announce_karma(mentioned_user_id, current_karma)
 
 
 async def announce_karma(mentioned_user_id, current_karma):
