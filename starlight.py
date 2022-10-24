@@ -14,7 +14,7 @@ STARLIGHT_ID = 716834761418735638
 # rename variables
 # Refactor code - the section where karma is modified.
 
-client = discord.Client()
+client = discord.Client(intents=discord.Intents.default())
 
 
 async def handle(request):
