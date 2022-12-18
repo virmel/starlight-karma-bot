@@ -1,23 +1,20 @@
-from config import ROLES_ALLOWED_POINTS
-from discord import app_commands
-import discord
 import json
-from config import BASE_PATH, JUDGE_ROLE
+import discord
+from discord import app_commands
+from config import BASE_PATH, JUDGE_ROLE, ROLES_ALLOWED_POINTS
 
 POINTS_FILE = f"{BASE_PATH}data/points.json"
 
 
-def save_points(points: dict[str:int]) -> None:
-    file_handle = open(POINTS_FILE, "w")
-    json.dump(points, file_handle)
-    file_handle.close()
+def save_points(points_dict: dict[str:int]) -> None:
+    with open(POINTS_FILE, "w", encoding="utf-8") as file_handle:
+        json.dump(points_dict, file_handle)
 
 
 def load_points() -> dict[str:int]:
-    file_handle = open(POINTS_FILE, "r")
-    contents = json.load(file_handle)
-    file_handle.close()
-    return contents
+    with open(POINTS_FILE, "r", encoding="utf-8") as file_handle:
+        contents = json.load(file_handle)
+        return contents
 
 
 points: dict[str:int] = load_points()
@@ -31,6 +28,7 @@ def get_points(role: str | int) -> int:
     return points.get(str(role), 0)
 
 
+# pylint: disable=unused-argument
 def add_points(role: str | int, amount: int, reason: str | None) -> int:
     points[str(role)] = get_points(role) + amount
     save_points(points)
@@ -40,8 +38,7 @@ def add_points(role: str | int, amount: int, reason: str | None) -> int:
 def top() -> str:
     if len(sorted_points()) > 0:
         return list(sorted_points().keys())[0]
-    else:
-        return None
+    return None
 
 
 def id_to_name(role: str | int, roles: list[discord.Role]) -> str | None:
@@ -64,7 +61,7 @@ class Points(app_commands.Group):
             return False
         if role.id in [causer_role.id for causer_role in causer.roles]:
             await interaction.response.send_message(
-                f"You can't change your own role's points"
+                "You can't change your own role's points"
             )
             return False
         if role.name not in ROLES_ALLOWED_POINTS:
@@ -80,7 +77,7 @@ class Points(app_commands.Group):
         num: int,
         reason: str,
     ) -> None:
-        if not (await self.validate(interaction, role)):
+        if not await self.validate(interaction, role):
             return
         top_before = top()
         add_points(role.id, num, reason)
@@ -104,7 +101,7 @@ class Points(app_commands.Group):
         num: int,
         reason: str,
     ) -> None:
-        if not (await self.validate(interaction, role)):
+        if not await self.validate(interaction, role):
             return
         top_before = top()
         add_points(role.id, -1 * num, reason)

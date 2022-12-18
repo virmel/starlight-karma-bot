@@ -1,23 +1,21 @@
-from discord import app_commands
-import discord
-import os
 import json
+import discord
+from discord import app_commands
 from config import BASE_PATH
 
 KARMA_FILE = f"{BASE_PATH}data/karma.json"
 
 
-def save_karma(karma: dict[str:int]) -> None:
-    file_handle = open(KARMA_FILE, "w")
-    json.dump(karma, file_handle)
-    file_handle.close()
+def save_karma(karma_dict: dict[str:int]) -> None:
+    with open(KARMA_FILE, "w", encoding="utf-8") as file_handle:
+        json.dump(karma_dict, file_handle)
 
 
 def load_karma() -> dict[str:int]:
-    file_handle = open(KARMA_FILE, "r")
-    contents = json.load(file_handle)
-    file_handle.close()
-    return contents
+    with open(KARMA_FILE, "r", encoding="utf-8") as file_handle:
+        contents = json.load(file_handle)
+        file_handle.close()
+        return contents
 
 
 karma: dict[str:int] = load_karma()
@@ -27,6 +25,7 @@ def sorted_karma() -> dict[str, int]:
     return dict(sorted(karma.items(), key=lambda item: item[1], reverse=True))
 
 
+# pylint: disable=unused-argument
 def add_karma(user: str | int, amount: int, reason: str | None) -> int:
     karma[str(user)] = get_karma(user) + amount
     save_karma(karma)
@@ -43,12 +42,12 @@ class Karma(app_commands.Group):
     ) -> bool:
         causer = interaction.user
         if target.bot:
-            await interaction.response.send_message(f"Bots don't have karma!")
+            await interaction.response.send_message("Bots don't have karma!")
             return False
         if causer.id == target.id:
             current_karma = add_karma(target.id, -1, "Tried altering their own karma")
             await interaction.response.send_message(
-                f"@{causer.display_name} tried altering their karma. SMH my head. -1 karma."
+                f"@{causer.display_name} tried altering their karma. SMH my head. -1 karma. They now have {current_karma} karma."
             )
             return False
         return True
@@ -60,14 +59,14 @@ class Karma(app_commands.Group):
         target: discord.Member,
         reason: str = None,
     ) -> None:
-        if not (await self.validate(interaction, target)):
+        if not await self.validate(interaction, target):
             return
+        current_karma = add_karma(target.id, 1, reason)
         if reason is not None:
             await interaction.response.send_message(
                 f"{interaction.user.display_name} gave karma to {target.display_name} because {reason}. They now have {current_karma} karma."
             )
         else:
-            current_karma = add_karma(target.id, 1, reason)
             await interaction.response.send_message(
                 f"{interaction.user.display_name} gave karma to {target.display_name}. They now have {current_karma} karma."
             )
@@ -79,14 +78,14 @@ class Karma(app_commands.Group):
         target: discord.Member,
         reason: str = None,
     ) -> None:
-        if not (await self.validate(interaction, target)):
+        if not await self.validate(interaction, target):
             return
+        current_karma = add_karma(target.id, -1, reason)
         if reason is not None:
             await interaction.response.send_message(
                 f"{interaction.user.display_name} took karma from {target.display_name} because {reason}. They now have {current_karma} karma."
             )
         else:
-            current_karma = add_karma(target.id, -1, reason)
             await interaction.response.send_message(
                 f"{interaction.user.display_name} took karma from {target.display_name}. They now have {current_karma} karma."
             )
