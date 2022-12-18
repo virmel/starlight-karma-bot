@@ -1,25 +1,15 @@
-ARG PYTHON_VERSION=3.9
-
-FROM python:${PYTHON_VERSION}
-
-RUN apt-get update && apt-get install -y \
-    python3-pip \
-    python3-venv \
-    python3-dev \
-    python3-setuptools \
-    python3-wheel
+FROM python:3-slim
+RUN pip install pipenv
 
 RUN mkdir -p /app
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+COPY Pipfile Pipfile.lock .
+RUN pipenv install
 
-COPY . .
-
-
+COPY starlight.py .
+COPY --chmod=0755 start.sh .
 
 EXPOSE 8080
 
-# replace APP_NAME with module name
-CMD ["python", "starlight.py"]
+CMD ["./start.sh"]

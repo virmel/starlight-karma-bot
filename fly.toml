@@ -1,4 +1,4 @@
-app = "snowy-meadow-1964"
+app = "starlight-karma-bot"
 kill_signal = "SIGINT"
 kill_timeout = 5
 processes = []
@@ -9,6 +9,10 @@ processes = []
 [experimental]
   allowed_public_ports = []
   auto_rollback = true
+
+[mounts]
+  source="starlight"
+  destination="/data"
 
 [[services]]
   http_checks = []
@@ -37,9 +41,6 @@ processes = []
     timeout = "2s"
 
 [[statics]]
+  destination = "/data"
   guest_path = "/app/public"
   url_prefix = "/static/"
-
-[mounts]
-  source="karma_data"
-  destination="/data"
