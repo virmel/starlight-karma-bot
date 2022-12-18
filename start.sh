@@ -10,5 +10,4 @@ if [ ! -f /data/points.json ]; then
   echo "{}" > /data/points.json
 fi
 
-python -m http.server 8080 &
 pipenv run python src/main.py

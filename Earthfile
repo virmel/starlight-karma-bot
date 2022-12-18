@@ -10,3 +10,10 @@ up:
     WITH DOCKER --load=+dockerfile
         RUN docker stop starlight || true && docker run --rm --name=starlight -v $(pwd)/data:/data starlight:latest
     END
+
+lint:
+  FROM python:3-slim
+  RUN pip install black
+  COPY src src
+  RUN black src
+  SAVE ARTIFACT src AS LOCAL src
