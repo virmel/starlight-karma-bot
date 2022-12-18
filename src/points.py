@@ -1,44 +1,8 @@
-import json
 import discord
+from util import sort_dict, top
+from json_store import load, save
 from discord import app_commands
 from config import BASE_PATH, JUDGE_ROLE, ROLES_ALLOWED_POINTS
-
-POINTS_FILE = f"{BASE_PATH}data/points.json"
-
-
-def save_points(points_dict: dict[str:int]) -> None:
-    with open(POINTS_FILE, "w", encoding="utf-8") as file_handle:
-        json.dump(points_dict, file_handle)
-
-
-def load_points() -> dict[str:int]:
-    with open(POINTS_FILE, "r", encoding="utf-8") as file_handle:
-        contents = json.load(file_handle)
-        return contents
-
-
-points: dict[str:int] = load_points()
-
-
-def sorted_points() -> dict[str, int]:
-    return dict(sorted(points.items(), key=lambda item: item[1], reverse=True))
-
-
-def get_points(role: str | int) -> int:
-    return points.get(str(role), 0)
-
-
-# pylint: disable=unused-argument
-def add_points(role: str | int, amount: int, reason: str | None) -> int:
-    points[str(role)] = get_points(role) + amount
-    save_points(points)
-    return get_points(role)
-
-
-def top() -> str:
-    if len(sorted_points()) > 0:
-        return list(sorted_points().keys())[0]
-    return None
 
 
 def id_to_name(role: str | int, roles: list[discord.Role]) -> str | None:
@@ -123,7 +87,7 @@ class Points(app_commands.Group):
         id_to_name_map = {role.id: role.name for role in roles}
         role_to_points_map = {
             id_to_name_map.get(int(key), "???"): value
-            for key, value in sorted_points().items()
+            for key, value in sort_dict(points).items()
         }
         role_string = "\n".join(
             [f"{key}: {value}" for key, value in role_to_points_map.items()]

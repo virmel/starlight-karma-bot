@@ -5,3 +5,5 @@ DISCORD_API_KEY = os.environ["DISCORD_API_KEY"]
 GUILD_ID = os.environ["GUILD_ID"]
 ROLES_ALLOWED_POINTS = os.environ["ROLES_ALLOWED_POINTS"].split(" ")
 JUDGE_ROLE = os.environ["JUDGE_ROLE"]
+KARMA_FILE = f"{BASE_PATH}data/karma.json"
+POINTS_FILE = f"{BASE_PATH}data/points.json"

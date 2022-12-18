@@ -1,42 +1,17 @@
-import json
 import discord
+from util import sort_dict, prefix_rank
+from json_store import JsonStore, Key, Value
+from typing import Optional
 from discord import app_commands
-from config import BASE_PATH
-
-KARMA_FILE = f"{BASE_PATH}data/karma.json"
-
-
-def save_karma(karma_dict: dict[str:int]) -> None:
-    with open(KARMA_FILE, "w", encoding="utf-8") as file_handle:
-        json.dump(karma_dict, file_handle)
-
-
-def load_karma() -> dict[str:int]:
-    with open(KARMA_FILE, "r", encoding="utf-8") as file_handle:
-        contents = json.load(file_handle)
-        file_handle.close()
-        return contents
-
-
-karma: dict[str:int] = load_karma()
-
-
-def sorted_karma() -> dict[str, int]:
-    return dict(sorted(karma.items(), key=lambda item: item[1], reverse=True))
-
-
-# pylint: disable=unused-argument
-def add_karma(user: str | int, amount: int, reason: str | None) -> int:
-    karma[str(user)] = get_karma(user) + amount
-    save_karma(karma)
-    return get_karma(user)
-
-
-def get_karma(user: str | int) -> int:
-    return karma.get(str(user), 0)
 
 
 class Karma(app_commands.Group):
+    __store: JsonStore
+
+    def __init__(self, file_name):
+        app_commands.Group.__init__(self)
+        self.__store = JsonStore(file_name)
+
     async def validate(
         self, interaction: discord.Interaction, target: discord.Member
     ) -> bool:
@@ -45,7 +20,7 @@ class Karma(app_commands.Group):
             await interaction.response.send_message("Bots don't have karma!")
             return False
         if causer.id == target.id:
-            current_karma = add_karma(target.id, -1, "Tried altering their own karma")
+            current_karma = self.__store.add(Key(str(target.id)), Value(-1))
             await interaction.response.send_message(
                 f"@{causer.display_name} tried altering their karma. SMH my head. -1 karma. They now have {current_karma} karma."
             )
@@ -57,11 +32,11 @@ class Karma(app_commands.Group):
         self,
         interaction: discord.Interaction,
         target: discord.Member,
-        reason: str = None,
+        reason: Optional[str],
     ) -> None:
         if not await self.validate(interaction, target):
             return
-        current_karma = add_karma(target.id, 1, reason)
+        current_karma = self.__store.add(Key(str(target.id)), Value(1))
         if reason is not None:
             await interaction.response.send_message(
                 f"{interaction.user.display_name} gave karma to {target.display_name} because {reason}. They now have {current_karma} karma."
@@ -76,11 +51,11 @@ class Karma(app_commands.Group):
         self,
         interaction: discord.Interaction,
         target: discord.Member,
-        reason: str = None,
+        reason: Optional[str],
     ) -> None:
         if not await self.validate(interaction, target):
             return
-        current_karma = add_karma(target.id, -1, reason)
+        current_karma = self.__store.add(Key(str(target.id)), Value(-1))
         if reason is not None:
             await interaction.response.send_message(
                 f"{interaction.user.display_name} took karma from {target.display_name} because {reason}. They now have {current_karma} karma."
@@ -92,20 +67,22 @@ class Karma(app_commands.Group):
 
     @app_commands.command(description="See karma values for everyone on the server")
     async def leaderboard(self, interaction: discord.Interaction) -> None:
-        if len(sorted_karma().items()) > 0:
+        if len(self.__store.__items.items()) > 0:
             results = await interaction.guild.query_members(
-                user_ids=[int(key) for key, value in sorted_karma().items()]
+                user_ids=[
+                    int(key) for key, value in sort_dict(self.__store.__items).items()
+                ]
             )
         else:
             results = []
         id_to_username_map = {result.id: result.display_name for result in results}
         username_to_karma_map = {
             id_to_username_map.get(int(key), "???"): value
-            for key, value in sorted_karma().items()
+            for key, value in self.__store.sorted().items()
         }
         users = [
             f"{key} ({value} karma)" for key, value in username_to_karma_map.items()
         ]
-        users = [f"#{index + 1} {value}" for index, value in enumerate(users)]
-        users = "\n".join(users)
-        await interaction.response.send_message(f"Karma Leaderboard:\n{users}")
+        users = prefix_rank(users)
+        users_string = "\n".join(users)
+        await interaction.response.send_message(f"Karma Leaderboard:\n{users_string}")
