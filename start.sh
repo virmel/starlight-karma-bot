@@ -11,4 +11,4 @@ if [ ! -f /data/points.json ]; then
 fi
 
 python -m http.server 8080 &
-pipenv run python starlight.py
+pipenv run python src/main.py

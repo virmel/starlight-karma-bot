@@ -7,7 +7,7 @@ WORKDIR /app
 COPY Pipfile Pipfile.lock .
 RUN pipenv install
 
-COPY starlight.py .
+COPY src src
 COPY --chmod=0755 start.sh .
 
 EXPOSE 8080
