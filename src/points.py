@@ -1,11 +1,11 @@
-from config import GROUPS_ALLOWED_POINTS
+from config import ROLES_ALLOWED_POINTS
 from discord import app_commands
 import discord
 import os
 import json
+from config import BASE_PATH, JUDGE_ROLE
 
-
-POINTS_FILE = "/data/points.json"
+POINTS_FILE = f"{BASE_PATH}data/points.json"
 
 
 def save_points(points: dict[str:int]) -> None:
@@ -28,14 +28,14 @@ def sorted_points() -> dict[str, int]:
     return dict(sorted(points.items(), key=lambda item: item[1], reverse=True))
 
 
-def get_points(group: str | int) -> int:
-    return points.get(str(group), 0)
+def get_points(role: str | int) -> int:
+    return points.get(str(role), 0)
 
 
-def add_points(group: str | int, amount: int, reason: str | None) -> int:
-    points[str(group)] = get_points(group) + amount
+def add_points(role: str | int, amount: int, reason: str | None) -> int:
+    points[str(role)] = get_points(role) + amount
     save_points(points)
-    return get_points(group)
+    return get_points(role)
 
 
 def top() -> str:
@@ -45,61 +45,64 @@ def top() -> str:
         return None
 
 
-def id_to_name(group: str | int, roles: list[discord.Role]) -> str | None:
-    for role in roles:
-        print(role.id, group)
-        if role.id == int(group):
-            return role.name
+def id_to_name(role: str | int, roles: list[discord.Role]) -> str | None:
+    for candidate in roles:
+        print(candidate.id, role)
+        if candidate.id == int(role):
+            return candidate.name
     return None
 
 
 class Points(app_commands.Group):
 
-    async def validate(self, interaction: discord.Interaction, group: discord.Role) -> bool:
+    async def validate(self, interaction: discord.Interaction, role: discord.Role) -> bool:
         causer = interaction.user
-        if (group.name not in GROUPS_ALLOWED_POINTS):
-            await interaction.response.send_message(f"{group.name} can't have points")
+        if (JUDGE_ROLE not in [causer_role.name for causer_role in causer.roles]):
+            await interaction.response.send_message(f"Only {JUDGE_ROLE} can change role points")
             return False
-        if (group.id in [role.id for role in causer.roles]):
-            await interaction.response.send_message(f"You can't change your own group's points")
+        if (role.id in [causer_role.id for causer_role in causer.roles]):
+            await interaction.response.send_message(f"You can't change your own role's points")
+            return False
+        if (role.name not in ROLES_ALLOWED_POINTS):
+            await interaction.response.send_message(f"{role.name} can't have points")
             return False
         return True
 
-    @app_commands.command(description="Award points to a group")
-    async def award(self, interaction: discord.Interaction, group: discord.Role, num: int, reason: str) -> None:
-        # if not (await self.validate(interaction, group)):
-        #     return
-        top_before = top()
-        add_points(group.id, num, reason)
-        top_after = top()
-        if top_before == top_after:
-            await interaction.response.send_message(f"{interaction.user.display_name} awarded {num} points to {group.name} for {reason}.")
-        else:
-            roles = await interaction.guild.fetch_roles()
-            name = id_to_name(top_after, roles)
-            await interaction.response.send_message(f"{interaction.user.display_name} awarded {num} points to {group.name} for {reason}. {name} now has the most points.")
-
-    @app_commands.command(description="Strip points from a group")
-    async def strip(self, interaction: discord.Interaction, group: discord.Role, num: int, reason: str) -> None:
-        if not (await self.validate(interaction, group)):
+    @app_commands.command(description="Award points to a role")
+    async def award(self, interaction: discord.Interaction, role: discord.Role, num: int, reason: str) -> None:
+        if not (await self.validate(interaction, role)):
             return
         top_before = top()
-        add_points(group.id, -1 * num, reason)
+        add_points(role.id, num, reason)
         top_after = top()
-        if (top_before == top_after):
-            await interaction.response.send_message(f"{interaction.user.display_name} stripped {num} points from {group.name} for {reason}.")
+        if top_before == top_after:
+            await interaction.response.send_message(f"{interaction.user.display_name} awarded {num} points to {role.name} for {reason}.")
         else:
             roles = await interaction.guild.fetch_roles()
             name = id_to_name(top_after, roles)
-            await interaction.response.send_message(f"{interaction.user.display_name} stripped {num} points from {group.name} for {reason}. {name} now has the most points.")
+            await interaction.response.send_message(f"{interaction.user.display_name} awarded {num} points to {role.name} for {reason}. {name} now has the most points.")
 
-    @app_commands.command(description="See points for all groups")
+    @app_commands.command(description="Strip points from a role")
+    async def strip(self, interaction: discord.Interaction, role: discord.Role, num: int, reason: str) -> None:
+        if not (await self.validate(interaction, role)):
+            return
+        top_before = top()
+        add_points(role.id, -1 * num, reason)
+        top_after = top()
+        if (top_before == top_after):
+            await interaction.response.send_message(f"{interaction.user.display_name} stripped {num} points from {role.name} for {reason}.")
+        else:
+            roles = await interaction.guild.fetch_roles()
+            name = id_to_name(top_after, roles)
+            await interaction.response.send_message(f"{interaction.user.display_name} stripped {num} points from {role.name} for {reason}. {name} now has the most points.")
+
+    @app_commands.command(description="See points for all roles")
     async def leaderboard(self, interaction: discord.Interaction) -> None:
         roles = await interaction.guild.fetch_roles()
         id_to_name_map = {
             role.id: role.name for role in roles}
         role_to_points_map = {id_to_name_map.get(
             int(key), "???"): value for key, value in sorted_points().items()}
-        groups = "\n".join([f"{key}: {value}" for key,
-                           value in role_to_points_map.items()])
-        await interaction.response.send_message(f"Points Leaderboard:\n{groups}")
+        role_string = "\n".join([f"{key}: {value}" for key,
+                                 value in role_to_points_map.items()])
+        await interaction.response.send_message(f"Points Leaderboard:\n{role_string}")

@@ -7,6 +7,7 @@ WORKDIR /app
 COPY Pipfile Pipfile.lock .
 RUN pipenv install
 
+COPY *.env .
 COPY src src
 COPY --chmod=0755 start.sh .
 

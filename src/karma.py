@@ -2,9 +2,9 @@ from discord import app_commands
 import discord
 import os
 import json
+from config import BASE_PATH
 
-
-KARMA_FILE = "/data/karma.json"
+KARMA_FILE = f"{BASE_PATH}data/karma.json"
 
 
 def save_karma(karma: dict[str:int]) -> None:
@@ -45,7 +45,9 @@ class Karma(app_commands.Group):
             await interaction.response.send_message(f"Bots don't have karma!")
             return False
         if (causer.id == target.id):
-            await interaction.response.send_message(f"You can't change your own karma :/")
+            current_karma = add_karma(
+                target.id, -1, "Tried altering their own karma")
+            await interaction.response.send_message(f"@{causer.display_name} tried altering their karma. SMH my head. -1 karma.")
             return False
         return True
 
