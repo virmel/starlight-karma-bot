@@ -39,13 +39,16 @@ def add_points(group: str | int, amount: int, reason: str | None) -> int:
 
 
 def top() -> str:
-    return list(sorted_points().keys())[0]
+    if (len(sorted_points()) > 0):
+        return list(sorted_points().keys())[0]
+    else:
+        return None
 
 
 def id_to_name(group: str | int, roles: list[discord.Role]) -> str | None:
-    print(group)
     for role in roles:
-        if role.id == group:
+        print(role.id, group)
+        if role.id == int(group):
             return role.name
     return None
 
@@ -69,7 +72,7 @@ class Points(app_commands.Group):
         top_before = top()
         add_points(group.id, num, reason)
         top_after = top()
-        if (top_before == top_after):
+        if top_before == top_after:
             await interaction.response.send_message(f"{interaction.user.display_name} awarded {num} points to {group.name} for {reason}.")
         else:
             roles = await interaction.guild.fetch_roles()
