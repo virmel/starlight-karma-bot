@@ -1,16 +1,12 @@
+from collections import namedtuple
 import discord
-from util import sort_dict, top
-from json_store import load, save
 from discord import app_commands
-from config import BASE_PATH, JUDGE_ROLE, ROLES_ALLOWED_POINTS
+from file_store import load
+from data import increment_and_save, add_and_save
+from config import POINTS_FILE, JUDGE_ROLE, ROLES_ALLOWED_POINTS
+from util import get_name, results_to_map, to_leaderboard_string, first_entry
 
-
-def id_to_name(role: str | int, roles: list[discord.Role]) -> str | None:
-    for candidate in roles:
-        print(candidate.id, role)
-        if candidate.id == int(role):
-            return candidate.name
-    return None
+RolePoints = namedtuple("RolePoints", "id name value")
 
 
 class Points(app_commands.Group):
@@ -43,16 +39,16 @@ class Points(app_commands.Group):
     ) -> None:
         if not await self.validate(interaction, role):
             return
-        top_before = top()
-        add_points(role.id, num, reason)
-        top_after = top()
+        top_before = first_entry(load(POINTS_FILE))
+        add_and_save(load(POINTS_FILE), str(role.id), num, POINTS_FILE)
+        top_after = first_entry(load(POINTS_FILE))
         if top_before == top_after:
             await interaction.response.send_message(
                 f"{interaction.user.display_name} awarded {num} points to {role.name} for {reason}."
             )
         else:
             roles = await interaction.guild.fetch_roles()
-            name = id_to_name(top_after, roles)
+            name = get_name(top_after, roles)
             await interaction.response.send_message(
                 f"{interaction.user.display_name} awarded {num} points to {role.name} for {reason}. {name} now has the most points."
             )
@@ -67,29 +63,30 @@ class Points(app_commands.Group):
     ) -> None:
         if not await self.validate(interaction, role):
             return
-        top_before = top()
-        add_points(role.id, -1 * num, reason)
-        top_after = top()
+        top_before = first_entry(load(POINTS_FILE))
+        add_and_save(load(POINTS_FILE), str(role.id), num, POINTS_FILE)
+        top_after = first_entry(load(POINTS_FILE))
         if top_before == top_after:
             await interaction.response.send_message(
                 f"{interaction.user.display_name} stripped {num} points from {role.name} for {reason}."
             )
         else:
             roles = await interaction.guild.fetch_roles()
-            name = id_to_name(top_after, roles)
+            name = get_name(top_after, roles)
             await interaction.response.send_message(
                 f"{interaction.user.display_name} stripped {num} points from {role.name} for {reason}. {name} now has the most points."
             )
 
     @app_commands.command(description="See points for all roles")
     async def leaderboard(self, interaction: discord.Interaction) -> None:
-        roles = await interaction.guild.fetch_roles()
-        id_to_name_map = {role.id: role.name for role in roles}
-        role_to_points_map = {
-            id_to_name_map.get(int(key), "???"): value
-            for key, value in sort_dict(points).items()
-        }
-        role_string = "\n".join(
-            [f"{key}: {value}" for key, value in role_to_points_map.items()]
-        )
-        await interaction.response.send_message(f"Points Leaderboard:\n{role_string}")
+        roles = load(POINTS_FILE)
+        if len(roles) > 0:
+            results = await interaction.guild.fetch_roles()
+        else:
+            results = []
+        roles = [
+            RolePoints(key, value, get_name(key, results_to_map(results)))
+            for key, value in roles.items()
+        ]
+        leaderboard = to_leaderboard_string(roles)
+        await interaction.response.send_message(f"Points Leaderboard:\n{leaderboard}")

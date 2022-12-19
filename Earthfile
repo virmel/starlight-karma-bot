@@ -11,6 +11,10 @@ up:
         RUN docker stop starlight || true && docker run --rm --name=starlight -v $(pwd)/data:/data starlight:latest
     END
 
+test:
+  FROM +dockerfile
+  RUN pipenv run pytest
+
 lint.black:
   FROM python:3-slim
   RUN pip install black

@@ -1,6 +1,6 @@
 import discord
 from discord import app_commands
-from config import DISCORD_API_KEY, GUILD_ID
+from config import GUILD_ID, DISCORD_API_KEY
 from karma import Karma
 from points import Points
 
@@ -16,8 +16,12 @@ class Starlight(discord.Client):
         await self.tree.sync(guild=guild)
 
 
-deafult_intents = discord.Intents.default()
-client = Starlight(intents=deafult_intents)
-client.tree.add_command(Karma())
-client.tree.add_command(Points())
-client.run(DISCORD_API_KEY)
+def main():
+    default_intents = discord.Intents.default()
+    client = Starlight(intents=default_intents)
+    client.tree.add_command(Karma())
+    client.tree.add_command(Points())
+    client.run(DISCORD_API_KEY)
+
+
+main()
