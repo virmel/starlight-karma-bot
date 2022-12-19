@@ -2,9 +2,9 @@ from collections import namedtuple
 import discord
 from discord import app_commands
 from file_store import load
-from data import increment_and_save, add_and_save
-from config import POINTS_FILE, JUDGE_ROLE, ROLES_ALLOWED_POINTS
-from util import get_name, results_to_map, to_leaderboard_string, first_entry
+from persisted_data import add
+from config import POINTS_FILE, JUDGE_ROLE, ROLES_ALLOWED_POINTS, BASE_PATH
+from util import get_name, results_to_map, to_leaderboard_string, first_key, load_image
 
 RolePoints = namedtuple("RolePoints", "id name value")
 
@@ -39,19 +39,22 @@ class Points(app_commands.Group):
     ) -> None:
         if not await self.validate(interaction, role):
             return
-        top_before = first_entry(load(POINTS_FILE))
-        add_and_save(load(POINTS_FILE), str(role.id), num, POINTS_FILE)
-        top_after = first_entry(load(POINTS_FILE))
+        top_before = first_key(load(POINTS_FILE))
+        add(POINTS_FILE, role.id, num)
+        top_after = first_key(load(POINTS_FILE))
         if top_before == top_after:
             await interaction.response.send_message(
                 f"{interaction.user.display_name} awarded {num} points to {role.name} for {reason}."
             )
         else:
             roles = await interaction.guild.fetch_roles()
-            name = get_name(top_after, roles)
+            name_map = results_to_map(roles)
+            name = get_name(top_after, name_map)
             await interaction.response.send_message(
                 f"{interaction.user.display_name} awarded {num} points to {role.name} for {reason}. {name} now has the most points."
             )
+            image_bytes = load_image(f"{BASE_PATH}assets/{name}.png")
+            await interaction.guild.edit(banner=image_bytes)
 
     @app_commands.command(description="Strip points from a role")
     async def strip(
@@ -63,19 +66,22 @@ class Points(app_commands.Group):
     ) -> None:
         if not await self.validate(interaction, role):
             return
-        top_before = first_entry(load(POINTS_FILE))
-        add_and_save(load(POINTS_FILE), str(role.id), num, POINTS_FILE)
-        top_after = first_entry(load(POINTS_FILE))
+        top_before = first_key(load(POINTS_FILE))
+        add(POINTS_FILE, role.id, num * -1)
+        top_after = first_key(load(POINTS_FILE))
         if top_before == top_after:
             await interaction.response.send_message(
                 f"{interaction.user.display_name} stripped {num} points from {role.name} for {reason}."
             )
         else:
             roles = await interaction.guild.fetch_roles()
-            name = get_name(top_after, roles)
+            name_map = results_to_map(roles)
+            name = get_name(top_after, name_map)
             await interaction.response.send_message(
                 f"{interaction.user.display_name} stripped {num} points from {role.name} for {reason}. {name} now has the most points."
             )
+            image_bytes = load_image(f"{BASE_PATH}assets/{name}.png")
+            await interaction.guild.edit(banner=image_bytes)
 
     @app_commands.command(description="See points for all roles")
     async def leaderboard(self, interaction: discord.Interaction) -> None:
@@ -85,8 +91,8 @@ class Points(app_commands.Group):
         else:
             results = []
         roles = [
-            RolePoints(key, value, get_name(key, results_to_map(results)))
+            RolePoints(key, get_name(key, results_to_map(results)), value)
             for key, value in roles.items()
         ]
-        leaderboard = to_leaderboard_string(roles)
+        leaderboard = to_leaderboard_string(roles, "points")
         await interaction.response.send_message(f"Points Leaderboard:\n{leaderboard}")

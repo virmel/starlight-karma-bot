@@ -25,7 +25,7 @@ def test_sort_dict_by_values():
 def test_number_list():
     test_list = ["a", "b"]
     actual = number_list(test_list)
-    assert actual == ["#1 a", "#2 b"]
+    assert actual == ["#1: a", "#2: b"]
 
 
 def test_results_to_map():
@@ -48,4 +48,4 @@ def test_get_name():
 def test_to_leaderboard_string():
     users = [KarmaUser(1, "test", 2)]
     actual = to_leaderboard_string(users)
-    assert actual == "#1 test (2 karma)"
+    assert actual == "#1: test (2 karma)"

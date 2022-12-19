@@ -9,12 +9,26 @@ def first_entry(input_dict):
     return None
 
 
+def first_key(input_dict):
+    first = first_entry(input_dict)
+    return list(first.keys())[0]
+
+
+def first_value(input_dict):
+    first = first_entry(input_dict)
+    return list(first.values())[0]
+
+
 def number_list(input_list) -> list[str]:
-    return [f"#{index + 1} {value}" for index, value in enumerate(input_list)]
+    return [f"#{index + 1}: {value}" for index, value in enumerate(input_list)]
 
 
 def results_to_map(results) -> dict[str, str]:
-    return {str(result.id): result.display_name for result in results}
+    if len(results) == 0:
+        return {}
+    if hasattr(results[0], "display_name"):
+        return {str(result.id): result.display_name for result in results}
+    return {str(result.id): result.name for result in results}
 
 
 def get_name(target_key: str, lookup_dict) -> str | None:
@@ -24,7 +38,12 @@ def get_name(target_key: str, lookup_dict) -> str | None:
     return None
 
 
-def to_leaderboard_string(users) -> str:
-    users_as_string = [f"{user[1]} ({user[2]} karma)" for user in users]
-    users_as_string = number_list(users_as_string)
-    return "\n".join(users_as_string)
+def to_leaderboard_string(entries, unit) -> str:
+    as_string = [f"{entry[1]} ({entry[2]} {unit})" for entry in entries]
+    as_string = number_list(as_string)
+    return "\n".join(as_string)
+
+
+def load_image(file_path):
+    with open(file_path, "rb") as file_handle:
+        return file_handle.read()
