@@ -47,5 +47,5 @@ def test_get_name():
 
 def test_to_leaderboard_string():
     users = [KarmaUser(1, "test", 2)]
-    actual = to_leaderboard_string(users)
+    actual = to_leaderboard_string(users, "karma")
     assert actual == "#1: test (2 karma)"

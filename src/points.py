@@ -3,7 +3,7 @@ import discord
 from discord import app_commands
 from file_store import load
 from persisted_data import add
-from config import POINTS_FILE, JUDGE_ROLE, ROLES_ALLOWED_POINTS, BASE_PATH
+from config import POINTS_FILE, JUDGE_ROLE, ROLES_ALLOWED_POINTS, ASSETS_PATH
 from util import get_name, results_to_map, to_leaderboard_string, first_key, load_image
 
 RolePoints = namedtuple("RolePoints", "id name value")
@@ -53,7 +53,7 @@ class Points(app_commands.Group):
             await interaction.response.send_message(
                 f"{interaction.user.display_name} awarded {num} points to {role.name} for {reason}. {name} now has the most points."
             )
-            image_bytes = load_image(f"{BASE_PATH}assets/{name}.png")
+            image_bytes = load_image(f"{ASSETS_PATH}/{name}.png")
             await interaction.guild.edit(banner=image_bytes)
 
     @app_commands.command(description="Strip points from a role")
@@ -80,7 +80,7 @@ class Points(app_commands.Group):
             await interaction.response.send_message(
                 f"{interaction.user.display_name} stripped {num} points from {role.name} for {reason}. {name} now has the most points."
             )
-            image_bytes = load_image(f"{BASE_PATH}assets/{name}.png")
+            image_bytes = load_image(f"{ASSETS_PATH}/{name}.png")
             await interaction.guild.edit(banner=image_bytes)
 
     @app_commands.command(description="See points for all roles")
