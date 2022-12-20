@@ -9,7 +9,7 @@ RUN pipenv install
 
 COPY *.env .
 COPY src src
-COPY assets assets
+COPY assets /assets
 COPY --chmod=0755 start.sh .
 
 EXPOSE 8080
