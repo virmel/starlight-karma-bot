@@ -1,7 +1,7 @@
 app = "snowy-meadow-1964"
 
 [mounts]
-  source="starlight"
+  source="karma_data"
   destination="/data"
 
 [deploy]
