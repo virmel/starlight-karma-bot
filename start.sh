@@ -10,4 +10,7 @@ if [ ! -f /data/points.json ]; then
   echo "{}" > /data/points.json
 fi
 
+cat /data/karma.json
+cat /data/points.json
+
 pipenv run python src/main.py

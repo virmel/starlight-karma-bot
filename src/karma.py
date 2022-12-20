@@ -44,25 +44,6 @@ class Karma(app_commands.Group):
                 f"{interaction.user.display_name} gave karma to {target.display_name}. They now have {current_karma} karma."
             )
 
-    @app_commands.command(description="Take karma away from someone")
-    async def take(
-        self,
-        interaction: discord.Interaction,
-        target: discord.Member,
-        reason: str | None,
-    ) -> None:
-        if not await self.validate(interaction, target):
-            return
-        current_karma = add(KARMA_FILE, target.id, -1)[str(target.id)]
-        if reason is not None:
-            await interaction.response.send_message(
-                f"{interaction.user.display_name} took karma from {target.display_name} because {reason}. They now have {current_karma} karma."
-            )
-        else:
-            await interaction.response.send_message(
-                f"{interaction.user.display_name} took karma from {target.display_name}. They now have {current_karma} karma."
-            )
-
     @app_commands.command(description="See karma values for everyone on the server")
     async def leaderboard(self, interaction: discord.Interaction) -> None:
         users = load(KARMA_FILE)
