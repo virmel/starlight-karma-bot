@@ -12,4 +12,5 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: cp defaults.env .env
       - run: flyctl deploy --remote-only
