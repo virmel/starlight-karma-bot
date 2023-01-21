@@ -11,11 +11,15 @@ def first_entry(input_dict):
 
 def first_key(input_dict):
     first = first_entry(input_dict)
+    if first is None:
+        return None
     return list(first.keys())[0]
 
 
 def first_value(input_dict):
     first = first_entry(input_dict)
+    if first is None:
+        return None
     return list(first.values())[0]
 
 
