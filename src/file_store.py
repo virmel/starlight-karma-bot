@@ -10,5 +10,6 @@ def save(data, file_name):
 def load(file_name):
     with open(file_name, "r", encoding="utf-8") as file_handle:
         data = json.load(file_handle)
+        print(data)
         file_handle.close()
         return sort_dict_by_values(data)
